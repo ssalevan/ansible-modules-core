@@ -260,9 +260,6 @@ def linodeServers(module, api, state, name, plan, display_group, distribution, d
                 res = api.linode_create(DatacenterID=datacenter, PlanID=plan, 
                                         PaymentTerm=payment_term)
                 linode_id = res['LinodeID']
-                # Update linode Label to match name
-                api.linode_update(LinodeId=linode_id, Label='%s_%s' % (linode_id, name),
-                                  lpm_displayGroup=display_group)
                 # Save server
                 servers = api.linode_list(LinodeId=linode_id)
             except Exception, e:
@@ -343,10 +340,15 @@ def linodeServers(module, api, state, name, plan, display_group, distribution, d
             except Exception, e:
                 module.fail_json(msg = '%s' % e.value[0]['ERRORMESSAGE'])
 
+        # Update linode Label to match name
+        api.linode_update(LinodeId=linode_id, Label='%s_%s' % (linode_id, name),
+                          lpm_displayGroup=display_group)
+
         # Start / Ensure servers are running
         for server in servers:
             # Refresh server state
             server = api.linode_list(LinodeId=server['LINODEID'])[0]
+
             # Ensure existing servers are up and running, boot if necessary
             if server['STATUS'] != 1:
                 res = api.linode_boot(LinodeId=linode_id)
